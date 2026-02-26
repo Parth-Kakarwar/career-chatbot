@@ -19,7 +19,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-MODEL = "openai/gpt-oss-20b:free"
+MODEL = "arcee-ai/trinity-large-preview:free"
 
 # -----------------------------------
 # KNOWLEDGE BASE
