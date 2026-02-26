@@ -445,14 +445,3 @@ def health():
         'version': '1.0'
     })
 
-if __name__ == '__main__':
-    print("\n" + "="*60)
-    print("Career Jankari Chatbot - Backend")
-    print("="*60)
-    print("\n🤖 Bot initialized")
-    print("📍 API: http://localhost:5001")
-    print("💬 Endpoint: POST /api/chat")
-    print("\nReady to answer student queries!")
-    print("="*60 + "\n")
-    
-    app.run(host="0.0.0.0", port=10000)
