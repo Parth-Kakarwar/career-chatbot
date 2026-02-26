@@ -1,5 +1,6 @@
 """
 Career Jankari Chatbot - AI + Knowledge Base Version
+Stable OpenRouter Integration
 """
 
 from flask import Flask, request, jsonify
@@ -18,7 +19,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-MODEL = "mistralai/mistral-7b-instruct"  # free model
+MODEL = "openai/gpt-oss-20b:free"
 
 # -----------------------------------
 # KNOWLEDGE BASE
@@ -44,6 +45,7 @@ KNOWLEDGE_BASE = {
 # -----------------------------------
 
 class ChatBot:
+
     def find_topic(self, query):
         query = query.lower()
         for topic, data in KNOWLEDGE_BASE.items():
@@ -53,15 +55,18 @@ class ChatBot:
         return None
 
     def call_openrouter(self, message):
+
         if not OPENROUTER_API_KEY:
             return "OpenRouter API key not configured."
 
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://career-chatbot-demo",
+            "X-Title": "Career Jankari AI"
         }
 
-        data = {
+        payload = {
             "model": MODEL,
             "messages": [
                 {
@@ -72,17 +77,36 @@ class ChatBot:
                     "role": "user",
                     "content": message
                 }
-            ]
+            ],
+            "temperature": 0.7
         }
 
         try:
-            response = requests.post(OPENROUTER_URL, headers=headers, json=data, timeout=20)
+            response = requests.post(
+                OPENROUTER_URL,
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+
             result = response.json()
-            return result["choices"][0]["message"]["content"]
+
+            print("OpenRouter RAW response:", result)
+
+            # Handle error response safely
+            if "error" in result:
+                return f"AI Error: {result['error']}"
+
+            if "choices" in result and len(result["choices"]) > 0:
+                return result["choices"][0]["message"]["content"]
+
+            return "AI did not return a valid response."
+
         except Exception as e:
             return f"Error contacting AI service: {str(e)}"
 
     def get_response(self, query):
+
         if not query:
             return {"response": "Please enter a question."}
 
@@ -91,7 +115,7 @@ class ChatBot:
         if topic:
             return {"response": KNOWLEDGE_BASE[topic]["info"]}
 
-        # If not in knowledge base → use AI
+        # Fallback to AI
         ai_response = self.call_openrouter(query)
         return {"response": ai_response}
 
@@ -114,5 +138,6 @@ def health():
     return jsonify({
         "status": "healthy",
         "ai_enabled": True,
-        "version": "2.0"
+        "model": MODEL,
+        "version": "3.0"
     })
